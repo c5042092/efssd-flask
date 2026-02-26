@@ -3,6 +3,12 @@ from flask import Flask, render_template
 # Create a Flask application instance
 app = Flask(__name__)
 
+siteName = "SHU EFSSD Module"
+# Set the site name in the app context
+@app.context_processor
+def inject_site_name():
+    return dict(siteName=siteName)
+
 # Routes
 #===================
 # These define which template is loaded, or action is taken, depending on the URL requested
