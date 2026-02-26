@@ -21,7 +21,7 @@ def index():
 
 @app.route('/about')
 def about():
-    return f"<h1>About Flask!</h1><p>It is easy to create new routes</p>"
+    return render_template('about.html', title="About EFSSD")
 
 @app.route('/about/<name>')
 def aboutName(name):
