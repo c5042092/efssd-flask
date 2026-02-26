@@ -27,6 +27,10 @@ def about():
 def aboutName(name):
     return f"<h1>About {name}!</h1><p>It is easy to create new routes</p>"
 
+@app.route('/contact')
+def contact():
+    return render_template('contact.html', title="Contact Us")
+
 # Run application
 #=========================================================
 # This code executes when the script is run directly.
