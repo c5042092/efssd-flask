@@ -25,6 +25,8 @@
                     <a class="nav-link active" aria-current="page" href="/">Home</a>
                     <a class="nav-link" href="/about">About</a>
                     <a class="nav-link" href="/contact">Contact</a>
+                    <a class="nav-link" href="/register">Register</a>
+                    <a class="nav-link" href="/login">Login</a>
                 </div>
             </div>
         </div>
@@ -34,6 +36,10 @@
         <div class="row">
             <!-- Column 1: Main Content -->
             <div id="main-content" class="col-md-8">
+                <!-- Flash Messages: This will display any error/success/status messages to the user -->
+                {% for category, message in get_flashed_messages(with_categories=True) %}
+                <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
                 {% block content %}
                 <!-- This is where the content from child templates will be inserted -->
                 {% endblock %}
