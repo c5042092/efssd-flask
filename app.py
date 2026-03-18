@@ -1,9 +1,10 @@
 # This code imports the Flask library and some functions from it.
-from flask import Flask, render_template, url_for, request, flash, redirect
+from flask import Flask, render_template, url_for, request, flash, redirect, session
 from flask_wtf import CSRFProtect
 from flask_wtf.csrf import generate_csrf
-from db.db import get_all_films, get_film_by_id
-from db.db import get_all_films, get_film_by_id, create_film, update_film, delete_film
+from db.db import *
+# from db.db import get_all_films, get_film_by_id
+# from db.db import get_all_films, get_film_by_id, create_film, update_film, delete_film
 
 # Create a Flask application instance
 app = Flask(__name__)
@@ -66,7 +67,18 @@ def register():
         else:
             flash(category='danger', message=error)
 
-        # [TO-DO]: Add real registration logic here (i.e., save to database)
+        # Check if username already exists
+        if get_user_by_username(username):
+            error = 'Username already exists! Please choose a different one.'
+        # If no errors, insert the new user
+        if error is None:
+            create_user(username, password)
+            flash(category='success', message=f"Registration successful! Welcome {username}!")
+            return redirect(url_for('login'))
+        else:
+            # Else, re-render the registration form with error messages
+            flash(category='danger', message=f"Registration failed: {error}")
+            return render_template('register.html', title="Register")
 
     # If the request method is GET, just render the registration form
     return render_template('register.html', title="Register")
@@ -85,7 +97,15 @@ def login():
         elif not password:
             error = 'Password is required!'
 
-        # [TO-DO]: Add real authentication logic here
+        # Validate user credentials
+        if error is None:
+            user = validate_login(username, password)
+            if user is None:
+                error = 'Invalid username or password!'
+            else:
+                session.clear()
+                session['user_id'] = user['id']
+                session['username'] = user['username']
 
         # Display appropriate flash messages
         if error is None:
