@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+<!-- Page Content -->
+{% block content %}
+<a href="{{ url_for('create') }}" class="btn btn-primary mb-3 float-end">Add</a>
+
+<h1>{{ title }}</h1>
+<hr />
+<!-- Row for Films Grid-->
+<div class="row g-1 g-sm-3">
+  {% for film in films %}
+  <!-- Film Card Column -->
+  <div class="col-sm-6">
+    <!-- Film Card -->
+    <div class="card h-100">
+      <!-- Film Card Content Row -->
+      <div class="row g-0">
+        <!-- Film Image/Poster Columns -->
+        <div
+          class="col-4 col-sm-12 col-xl-4 bg-secondary-subtle d-flex align-items-center justify-content-center"
+        >
+          <a href="{{ url_for('film', id=film['id']) }}">
+            <img
+              src="{{ film['poster'] }}"
+              alt="Poster for {{ film['title'] }}"
+              class="img-fluid"
+            />
+          </a>
+        </div>
+        <!-- Film Details Columns -->
+        <div class="col-8 col-sm-12 col-xl-8">
+          <div class="card-body">
+            <h5 class="card-title">
+              {{ film['title'] }} ({{ film['release_year'] }})
+            </h5>
+            <p class="card-text mb-1">{{ film['tagline'] }}</p>
+            <!-- Genre Badge and View Details Button -->
+            <div class="badge text-bg-secondary mb-2">{{ film['genre'] }}</div>
+            <br />
+            <a
+              href="{{ url_for('film', id=film['id']) }}"
+              class="btn btn-sm btn-outline-secondary"
+              >Film Details</a
+            >
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}
