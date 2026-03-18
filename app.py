@@ -3,8 +3,6 @@ from flask import Flask, render_template, url_for, request, flash, redirect, ses
 from flask_wtf import CSRFProtect
 from flask_wtf.csrf import generate_csrf
 from db.db import *
-# from db.db import get_all_films, get_film_by_id
-# from db.db import get_all_films, get_film_by_id, create_film, update_film, delete_film
 
 # Create a Flask application instance
 app = Flask(__name__)
@@ -116,6 +114,13 @@ def login():
 
     # If the request method is GET, render the login form
     return render_template("login.html", title="Log In")
+
+@app.route('/logout/')
+def logout():
+    # Clear the session and redirect to the index page with a flash message
+    session.clear()
+    flash(category='info', message='You have been logged out.')
+    return redirect(url_for('index'))
 
 @app.route('/films')
 def films():
