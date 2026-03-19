@@ -7,6 +7,10 @@ from db.db import *
 # Create a Flask application instance
 app = Flask(__name__)
 
+# Allowed image extensions for uploads
+ALLOWED_IMAGE_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
+UPLOADS_PATH = "."
+
 siteName = "SHU EFSSD Module"
 # Set the site name in the app context
 @app.context_processor
@@ -194,8 +198,18 @@ def create():
         watched = True if request.form.get('watched') == 'on' else False
         rating = int(request.form['rating']) if request.form.get('rating') else None
         review = request.form['review']
-        # [TO-DO] Image Upload
-        poster = request.form['poster']  # [TO-DO] Image Upload
+        
+        # Handle poster image upload
+        poster = None
+        if 'poster' in request.files:
+            poster_file = request.files['poster']
+            # Check it is an image file and save it
+            if poster_file and poster_file.filename.rsplit('.', 1)[1].lower() in ALLOWED_IMAGE_EXTENSIONS:
+                # Save the file to the static/uploads directory
+                poster_url = f"/static/uploads/{poster_file.filename}"
+                poster_file.save(f"{UPLOADS_PATH}{poster_url}")
+                poster = poster_url  # Use the uploaded file URL in database
+        
         # Validate the input
         if not title:
             flash(category='danger', message='Title is required!')
@@ -240,7 +254,17 @@ def update(id):
         if request.form.get('rating'):
             rating = int(request.form['rating'])
         review = request.form['review']
-        poster = film['poster']  # [TO-DO] Image Upload
+        # Handle poster image upload
+        poster = film['poster']  # Default to existing poster
+        if 'poster' in request.files:
+            poster_file = request.files['poster']
+            # Check it is an image file and save it
+            if poster_file and poster_file.filename.rsplit('.', 1)[1].lower() in ALLOWED_IMAGE_EXTENSIONS:
+                # Save the file to the static/uploads directory
+                poster_url = f"/static/uploads/{poster_file.filename}"
+                poster_file.save(f"{UPLOADS_PATH}{poster_url}")
+                poster = poster_url  # Use the uploaded file URL in database
+
         # Validate the input
         if not title:
             flash(category='danger', message='Title is required!')
