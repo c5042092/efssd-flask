@@ -55,20 +55,37 @@ def get_user_by_id(user_id):
     if user is None:
         abort(404)
     return user
+
 # Film Display functions
 # =========================================================
-
-# Placeholder functions to simulate database operations
-# Get all films
-def get_all_films():
-    return films_data
-    # Get a film by its ID
-    def get_film_by_id(film_id):
-        return next((film for film in films_data if film['id'] == film_id), None)
+# Get all films (or filter by user)
+def get_all_films(user=None, limit=None, order_by='title ASC'):
+    conn = get_db_connection()
+    # Construct base query
+    query = 'SELECT * FROM films'
+    # If user is specified, filter films by that user
+    if user:
+        query += ' WHERE user = ?'
+    # Add ORDER BY to the query if specified
+    query += f' ORDER BY {order_by}'
+    # Add LIMIT if specified
+    if limit:
+        query += f' LIMIT {limit}'
+    # Execute the query
+    if user:
+        films = conn.execute(query, (user,)).fetchall()
+    else:
+        films = conn.execute(query).fetchall()
+    conn.close()
+    
+    return films
 
 # Get a film by its ID
 def get_film_by_id(film_id):
-    return next((film for film in films_data if film['id'] == film_id), None)
+    conn = get_db_connection()
+    film = conn.execute('SELECT * FROM films WHERE id = ?', (film_id,)).fetchone()
+    conn.close()
+    return film
 
 def create_film(film_data):
     # Generate a new ID based on the current max

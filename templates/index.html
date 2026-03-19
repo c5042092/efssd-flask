@@ -1,7 +1,23 @@
 {% extends "base.html" %}
 
 {% block content %}
-    <h1>Hello {{ username }}</h1>
-    <hr>
-    <p>Welcome to the home page of the site.</p>
+<h1>Hello {{ username }}</h1>
+<hr>
+<h2>Recently Added Films...</h2>
+
+<div class="list-group">
+    {% for film in films %}
+    <a href="{{ url_for('film', id=film['id']) }}" class="list-group-item list-group
+item-action">
+        <div class="d-flex w-100 justify-content-between">
+            <h5 class="mb-1">{{ film['title'] }} ({{ film['release_year'] }})</h5>
+            <small>Added by {{ film['user'] | get_username }}</small>
+        </div>
+        <p class="mb-1">{{ film['tagline'] }}</p>
+        <small>Genre: {{ film['genre'] }}</small>
+    </a>
+    {% else %}
+    <p class="text-muted">No films available.</p>
+    {% endfor %}
+</div>
 {% endblock %}

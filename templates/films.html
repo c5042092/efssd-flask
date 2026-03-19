@@ -1,7 +1,9 @@
 {% extends "base.html" %}
 <!-- Page Content -->
 {% block content %}
-<a href="{{ url_for('create') }}" class="btn btn-primary mb-3 float-end">Add</a>
+{% if session['user_id'] == films_user %}
+  <a href="{{ url_for('create') }}" class="btn btn-primary mb-3 float-end">+ Add</a>
+{% endif %}
 
 <h1>{{ title }}</h1>
 <hr />

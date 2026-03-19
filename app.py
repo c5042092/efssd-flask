@@ -20,6 +20,13 @@ csrf = CSRFProtect(app) # This automatically protects all POST routes
 def inject_csrf_token():
     return dict(csrf_token=generate_csrf())
 
+# Helper function to get a username by user ID and provide it to templates 
+# eg: {{ film['user']|get_username }})
+@app.template_filter()
+def get_username(user_id):
+    user = get_user_by_id(user_id)
+    return user['username'] if user else 'Unknown'
+
 # Routes
 #===================
 # These define which template is loaded, or action is taken, depending on the URL requested
@@ -27,8 +34,15 @@ def inject_csrf_token():
 # Home Page
 @app.route('/')
 def index():
-    studentName = "Victor Abbah"
-    return render_template('index.html', title="Welcome", username=studentName)
+    # This defines a variable 'studentName' that will be passed to the output HTML
+    studentName = "SHU Student"
+    # If a ‘username’ exists in the session data, use this instead
+    if 'username' in session:
+        studentName = session['username']
+    # Get a list of films to display on the homepage
+    films = get_all_films(limit=5, order_by='created DESC')  # Fetch the latest 5 films added
+    # Render the 'index.html' template and pass the 'name' variable to it and a title to set the page title dynamically
+    return render_template('index.html', title="Welcome", username=studentName, films=films)
 
 @app.route('/about')
 def about():
@@ -122,11 +136,21 @@ def logout():
     flash(category='info', message='You have been logged out.')
     return redirect(url_for('index'))
 
-@app.route('/films')
+# Films List Page
+@app.route('/films/')
 def films():
-    film_list = get_all_films() 
+    user_id = session.get('user_id')  # Get the logged-in user's ID from the session
+    
+    # Ensure user is logged in to view films
+    if user_id is None:
+        flash(category='warning', message='You must be logged in to view this page.')
+        return redirect(url_for('login'))
+    
+    # Get films list data
+    film_list = get_all_films(user_id)
+
     # Render the films.html template with a list of films
-    return render_template('films.html', title="All Films", films=film_list)
+    return render_template('films.html', title="Your Films", films=film_list, films_user=user_id)
 
 # Film Detail Page
 @app.route('/film/<int:id>/')
@@ -139,6 +163,17 @@ def film(id):
         # If film not found, redirect to films list with a flash message
         flash(category='warning', message='Requested film not found!')
         return redirect(url_for('films'))
+    
+# Users Films List Page
+@app.route('/films/<int:user_id>/')
+def userFilms(user_id):
+    
+    # Get films list data
+    film_list = get_all_films(user_id)  
+    # Get user info
+    user = get_user_by_id(user_id)
+    # Render the films.html template with a list of films
+    return render_template('films.html', title=f"Films added by {user['username']}", films=film_list, films_user=user_id)
 
 @app.route('/create/', methods=('GET', 'POST'))
 def create():
