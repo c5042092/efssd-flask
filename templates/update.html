@@ -38,6 +38,16 @@
             <label for="director">Director</label>
         </div>
     </div>
+    <div class="col-12">
+        <!-- Actors multi-select -->
+        <label for="actor_ids">Actors (Press CTRL and Click to Select)</label>
+        <select name="actor_ids" multiple class="form-select">
+        {% for actor in all_actors %}
+        <option value="{{ actor.id }}" {% if actor.id in film_actor_ids %}selected{% 
+        endif %}>{{ actor.name }}</option>
+        {% endfor %}
+        </select>
+    </div> 
     <div class="col-12 mt-0">
         <!--Film poster file upload -->
         <div class="d-flex flex-sm-row align-items-center justify-content-center mt-3 gap-2">

@@ -160,9 +160,9 @@ def films():
 @app.route('/film/<int:id>/')
 def film(id):
     # Get film data
-    film_data = get_film_by_id(id) 
+    film_data, film_actors, film_actor_ids = get_film_by_id(id) 
     if film_data:
-        return render_template('film.html', title=film_data['title'], film=film_data)
+        return render_template('film.html', title=film_data['title'], film=film_data, film_actors=film_actors)
     else:
         # If film not found, redirect to films list with a flash message
         flash(category='warning', message='Requested film not found!')
@@ -187,6 +187,9 @@ def create():
         flash(category='warning', message='You must be logged in to add a film.')
         return redirect(url_for('login'))
     
+    # Get all actors for the multi-select
+    all_actors = get_all_actors()
+
     # If the request method is POST, process the form submission
     if request.method == 'POST':
          # Get the input from the form
@@ -214,19 +217,25 @@ def create():
         if not title:
             flash(category='danger', message='Title is required!')
             return redirect(url_for('create'))
+        
         # Use the database function to insert the new film
-        create_film(user, title, tagline, director, poster, release_year, genre, watched, rating, review)
+        film_id = create_film(user, title, tagline, director, poster, release_year, genre, watched, rating, review)
+        
+        # Update the film actors
+        actor_ids = request.form.getlist('actor_ids')
+        update_film_actors(film_id, actor_ids)
         
         # Flash a success message
         flash(category='success', message='Created successfully!')
         return redirect(url_for('films'))
-    return render_template('create.html', title="Add A New Film")
+    return render_template('create.html', title="Add A New Film", all_actors=all_actors)
 
 @app.route('/update/<int:id>/', methods=('GET', 'POST'))
 def update(id):
 
     # Get film data
-    film = get_film_by_id(id)
+    film, film_actors, film_actor_ids = get_film_by_id(id)
+    all_actors = get_all_actors()
 
      # Check for errors
     error = None
@@ -272,15 +281,20 @@ def update(id):
         # Use the database function to update the film
         update_film(id, title, tagline, director, poster, release_year, genre, watched, rating, review)
         
+        # Update the film actors
+        actor_ids = request.form.getlist('actor_ids')
+        update_film_actors(id, actor_ids)
+
         # Flash a success message and redirect to the index page
         flash(category='success', message='Updated successfully!')
         return redirect(url_for('film', id=id))
-    return render_template('update.html', title="Update Film", film=film)
+    return render_template('update.html', film=film, film_actors=film_actors, film_actor_ids=film_actor_ids, all_actors=all_actors)
 
 @app.route('/delete/<int:id>', methods=('POST',))
 def delete(id):
-     # Get the film 
-    film = get_film_by_id(id)
+    # Get the film 
+    film = get_film_by_id(id, include_actors=False)
+
     # Check for errors
     error = None
     if film is None:     # If film not found, add error message
@@ -292,8 +306,10 @@ def delete(id):
     # If there was an error, redirect to films list
     if error:
         return redirect(url_for('films'))
+    
     # Use the database function to delete the film
     delete_film(id)
+    delete_film_actors(id)
     
     # Flash a success message and redirect to the index page
     flash(category='success', message='Film deleted successfully!')

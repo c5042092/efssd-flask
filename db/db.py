@@ -15,6 +15,9 @@ __all__ = [
     "validate_login",
     "get_user_by_username",
     "get_user_by_id",
+    "get_all_actors",
+    "update_film_actors",
+    "delete_film_actors"
 ]
 
 # Establish connection to the SQLite database
@@ -88,13 +91,16 @@ def get_film_by_id(film_id):
     return film
 
 # Create a new film
-def create_film(user_id, title, tagline, director, poster, release_year, genre, watched, 
-rating, review):
+def create_film(user_id, title, tagline, director, poster, release_year, genre, watched, rating, review):
     conn = get_db_connection()
-    conn.execute('INSERT INTO films (user, title, tagline, director, poster, release_year, genre, watched, rating, review) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-    (user_id, title, tagline, director, poster, release_year, genre, watched, rating, review))
+    cur = conn.cursor()
+    cur.execute('INSERT INTO films (user, title, tagline, director, poster, release_year, genre, watched, rating, review) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+ (user_id, title, tagline, director, poster, release_year, genre, watched, 
+rating, review))
     conn.commit()
+    film_id = cur.lastrowid  # GET THE ID
     conn.close()
+    return film_id
 
 # Update a film by its ID
 def update_film(film_id, title, tagline, director, poster, release_year, genre, watched, rating, review):
@@ -108,5 +114,57 @@ def update_film(film_id, title, tagline, director, poster, release_year, genre, 
 def delete_film(film_id):
     conn = get_db_connection()
     conn.execute('DELETE FROM films WHERE id = ?', (film_id,))
+    conn.commit()
+    conn.close()
+
+# Actor Display functions
+# =========================================================
+# Get all actors
+def get_all_actors():
+    conn = get_db_connection()
+    actors = conn.execute('SELECT * FROM actors ORDER BY name ASC').fetchall()
+    conn.close()
+    return actors
+
+def get_film_actors(film_id):
+    conn = get_db_connection()
+    film_actors = conn.execute('''
+        SELECT *
+        FROM actors
+        JOIN film_actors ON actors.id = film_actors.actor_id
+        WHERE film_actors.film_id = ?
+    ''', (film_id,)).fetchall()
+    
+    # Create a list of actor IDs for easier checking
+    film_actor_ids = [actor["id"] for actor in film_actors]
+    conn.close()
+    return film_actors, film_actor_ids
+
+def get_film_by_id(film_id, include_actors=True):
+    conn = get_db_connection()
+    film = conn.execute('SELECT * FROM films WHERE id = ?', (film_id,)).fetchone()
+    conn.close()
+    if not include_actors:
+        return film
+    # Get the actors for this film
+    film_actors, film_actor_ids = get_film_actors(film_id)
+    
+    return film, film_actors, film_actor_ids
+
+# Update a film actors a
+def update_film_actors(id, actor_ids):
+    conn = get_db_connection()
+    # First, delete existing actor associations for the film
+    conn.execute('DELETE FROM film_actors WHERE film_id = ?', (id,))
+    # Then, insert the new actor associations
+    for actor_id in actor_ids:
+        conn.execute('INSERT INTO film_actors (film_id, actor_id) VALUES (?, ?)', (id, actor_id))
+    conn.commit()
+    conn.close()
+
+# Delete film actors associations
+def delete_film_actors(film_id):
+    conn = get_db_connection()
+    conn.execute('DELETE FROM film_actors WHERE film_id = ?', (film_id,))
     conn.commit()
     conn.close()
